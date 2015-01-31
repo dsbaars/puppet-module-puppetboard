@@ -1,9 +1,7 @@
 require 'beaker-rspec'
 
 hosts.each do |host|
-  # Install Puppet
-  install_package host, 'rubygems'
-  on host, 'gem install puppet --no-ri --no-rdoc'
+  # Broken in "original" module, ruby gems should be already installed
   on host, "mkdir -p #{host['distmoduledir']}"
 end
 
@@ -19,9 +17,11 @@ RSpec.configure do |c|
     # Install module
     puppet_module_install(:source => proj_root, :module_name => 'puppetboard')
     hosts.each do |host|
-      on host, puppet('module','install','puppetlabs-stdlib'), { :acceptable_exit_codes => [0,1] }
-      on host, puppet('module','install','stankevich-python'), { :acceptable_exit_codes => [0,1] }
-      on host, puppet('module','install','puppetlabs-vcsrepo'), { :acceptable_exit_codes => [0,1] }
+        on host, puppet('module','install','puppetlabs-stdlib'), { :acceptable_exit_codes => [0,1] }
+        on host, puppet('module','install','jfryman-nginx'), { :acceptable_exit_codes => [0,1] }
+        on host, puppet('module','install','puppetlabs-apache'), { :acceptable_exit_codes => [0,1] }
+        on host, puppet('module','install','stankevich-python'), { :acceptable_exit_codes => [0,1] }
+        on host, puppet('module','install','puppetlabs-vcsrepo'), { :acceptable_exit_codes => [0,1] }
     end
   end
 end

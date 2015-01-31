@@ -17,11 +17,8 @@
 #
 # [*port*]
 #   (int) Port for the vhost to listen on.
-#   Defaults to 5000.
-#
-# [*threads*]
-#   (int) Number of WSGI threads to use.
-#   Defaults to 5
+#   Defaults to 80.
+#s
 #
 # [*user*]
 #   (string) WSGI daemon process user, and daemon process name
@@ -37,40 +34,51 @@
 #
 class puppetboard::nginx::vhost (
   $vhost_name,
-  $wsgi_alias  = '/',
-  $port        = 5000,
-  $threads     = 5,
-  $user        = $::puppetboard::params::user,
-  $group       = $::puppetboard::params::group,
-  $basedir     = $::puppetboard::params::basedir,
+  $wsgi_alias    = '/',
+  $port          = 80,
+  $threads       = 5,
+  $user          = $::puppetboard::params::user,
+  $group         = $::puppetboard::params::group,
+  $basedir       = $::puppetboard::params::basedir,
+  $uwsgi_socket  = '/tmp/puppetboard.sock'
 ) inherits ::puppetboard::params {
 
-  $docroot = "${basedir}/puppetboard"
+    $docroot = "${basedir}/puppetboard"
 
-  $wsgi_script_aliases = {
-    "${wsgi_alias}" => "${docroot}/wsgi.py",
-  }
+    $wsgi_script_aliases = {
+        "${wsgi_alias}" => "${docroot}/wsgi.py",
+    }
 
-  $wsgi_daemon_process_options = {
-    threads => $threads,
-    group   => $group,
-    user    => $user,
-  }
+    $wsgi_daemon_process_options = {
+        threads => $threads,
+        group   => $group,
+        user    => $user,
+    }
 
-  # Template Uses:
-  # - $basedir
-  #
-  file { "${docroot}/wsgi.py":
-    ensure  => present,
-    content => template('puppetboard/wsgi.py.erb'),
-    owner   => $user,
-    group   => $group,
-    require => User[$user],
-  }
+    # Template Uses:
+    # - $basedir
+    #
+    file { "${docroot}/wsgi.py":
+        ensure  => present,
+        content => template('puppetboard/wsgi.py.erb'),
+        owner   => $user,
+        group   => $group,
+        require => User[$user],
+    }
 
-  ::nginx::resource::vhost { $vhost_name:
-    port                        => $port,
-    www_root                    => $docroot,
-    require                     => File["${docroot}/wsgi.py"],
-  }
+    ::nginx::resource::vhost { $vhost_name:
+        port                        => $port,
+        www_root                    => $docroot,
+        use_default_location        => false,
+        require                     => File["${docroot}/wsgi.py"],
+    }
+
+    ::nginx::resource::location { "${vhost_name}_uwsgi":
+       ensure              => present,
+       location            => $wsgi_alias,
+       vhost               => $vhost_name,
+       location_custom_cfg => {
+           "uwsgi_pass" => "unix://${uwsgi_socket}"
+       }
+   }
 }
