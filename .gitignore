@@ -5,3 +5,6 @@ pkg/
 .vagrant/
 .bundle/
 vendor/
+.tmp/
+.librarian/
+modules/
