@@ -81,8 +81,8 @@ class puppetboard::nginx::vhost (
     }
     ~>
     service { 'uwsgi-puppetboard':
-        ensure   => running
-        provider => 'upstart',
+        ensure   => running,
+        provider => 'upstart'
     }
 
     # ::python::gunicorn { "${vhost_name}_gunicorn" :
