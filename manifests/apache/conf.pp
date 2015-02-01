@@ -34,6 +34,11 @@
 # This runs the WSGI application with a WSGIProcessGroup of $user and
 # a WSGIApplicationGroup of %{GLOBAL}.
 #
+# === Authors
+#
+# 2015 Djuri Baars
+# 2014 Spencer Krum
+#
 class puppetboard::apache::conf (
   $wsgi_alias = '/puppetboard',
   $threads    = 5,

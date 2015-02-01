@@ -4,4 +4,4 @@ description "uWSGI puppetboard"
 start on runlevel [2345]
 stop on runlevel [06]
 
-exec uwsgi --master --processes 4 --die-on-term --socket <%= @uwsgi_socket -%> --wsgi-file <%= @docroot -%>/wsgi.py
+exec uwsgi --master --processes <%= @wsgi_threads -%> --die-on-term --socket <%= @uwsgi_socket -%> --wsgi-file <%= @docroot -%>/wsgi.py

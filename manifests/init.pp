@@ -136,79 +136,84 @@
 #    basedir => '/www/puppetboard'
 #  }
 #
+# === Authors
+#
+# 2015 Djuri Baars
+# 2014 Spencer Krum
+#
 class puppetboard(
-  $user                = $::puppetboard::params::user,
-  $group               = $::puppetboard::params::group,
-  $groups              = $::puppetboard::params::groups,
-  $basedir             = $::puppetboard::params::basedir,
-  $git_source          = $::puppetboard::params::git_source,
-  $dev_listen_host     = $::puppetboard::params::dev_listen_host,
-  $dev_listen_port     = $::puppetboard::params::dev_listen_port,
-  $puppetdb_host       = $::puppetboard::params::puppetdb_host,
-  $puppetdb_port       = $::puppetboard::params::puppetdb_port,
-  $puppetdb_key        = $::puppetboard::params::puppetdb_key,
-  $puppetdb_ssl_verify = $::puppetboard::params::puppetdb_ssl_verify,
-  $puppetdb_cert       = $::puppetboard::params::puppetdb_cert,
-  $puppetdb_timeout    = $::puppetboard::params::puppetdb_timeout,
-  $unresponsive        = $::puppetboard::params::unresponsive,
-  $enable_query        = $::puppetboard::params::enable_query,
-  $localise_timestamp  = $::puppetboard::params::localise_timestamp,
-  $python_loglevel     = $::puppetboard::params::python_loglevel,
-  $python_proxy        = $::puppetboard::params::python_proxy,
-  $experimental        = $::puppetboard::params::experimental,
-  $revision            = $::puppetboard::params::revision,
-  $reports_count       = $::puppetboard::params::reports_count,
-  $manage_user         = true,
-  $manage_group        = true,
-  $manage_git          = false,
-  $manage_virtualenv   = false,
-  $reports_count       = $::puppetboard::params::reports_count,
-  $listen              = $::puppetboard::params::listen,
-  $extra_settings      = $::puppetboard::params::extra_settings,
+    $user                = $::puppetboard::params::user,
+    $group               = $::puppetboard::params::group,
+    $groups              = $::puppetboard::params::groups,
+    $basedir             = $::puppetboard::params::basedir,
+    $git_source          = $::puppetboard::params::git_source,
+    $dev_listen_host     = $::puppetboard::params::dev_listen_host,
+    $dev_listen_port     = $::puppetboard::params::dev_listen_port,
+    $puppetdb_host       = $::puppetboard::params::puppetdb_host,
+    $puppetdb_port       = $::puppetboard::params::puppetdb_port,
+    $puppetdb_key        = $::puppetboard::params::puppetdb_key,
+    $puppetdb_ssl_verify = $::puppetboard::params::puppetdb_ssl_verify,
+    $puppetdb_cert       = $::puppetboard::params::puppetdb_cert,
+    $puppetdb_timeout    = $::puppetboard::params::puppetdb_timeout,
+    $unresponsive        = $::puppetboard::params::unresponsive,
+    $enable_query        = $::puppetboard::params::enable_query,
+    $localise_timestamp  = $::puppetboard::params::localise_timestamp,
+    $python_loglevel     = $::puppetboard::params::python_loglevel,
+    $python_proxy        = $::puppetboard::params::python_proxy,
+    $experimental        = $::puppetboard::params::experimental,
+    $revision            = $::puppetboard::params::revision,
+    $reports_count       = $::puppetboard::params::reports_count,
+    $manage_user         = true,
+    $manage_group        = true,
+    $manage_git          = false,
+    $manage_virtualenv   = false,
+    $reports_count       = $::puppetboard::params::reports_count,
+    $listen              = $::puppetboard::params::listen,
+    $extra_settings      = $::puppetboard::params::extra_settings,
 ) inherits ::puppetboard::params {
-  validate_bool($enable_query)
-  validate_bool($experimental)
-  validate_bool($localise_timestamp)
-  validate_hash($extra_settings)
+    validate_bool($enable_query)
+    validate_bool($experimental)
+    validate_bool($localise_timestamp)
+    validate_hash($extra_settings)
 
-  if $manage_group {
-    group { $group:
-      ensure => present,
+    if $manage_group {
+        group { $group:
+            ensure => present,
+        }
     }
-  }
 
-  if $manage_user {
-    user { $user:
-      ensure     => present,
-      shell      => '/bin/bash',
-      managehome => true,
-      gid        => $group,
-      system     => true,
-      groups     => $groups,
-      require    => Group[$group],
+    if $manage_user {
+        user { $user:
+            ensure     => present,
+            shell      => '/bin/bash',
+            managehome => true,
+            gid        => $group,
+            system     => true,
+            groups     => $groups,
+            require    => Group[$group],
+        }
     }
-  }
 
-  file { $basedir:
-    ensure => 'directory',
-    owner  => $user,
-    group  => $group,
-    mode   => '0755',
-  }
+    file { $basedir:
+        ensure => 'directory',
+        owner  => $user,
+        group  => $group,
+        mode   => '0755',
+    }
 
-  vcsrepo { "${basedir}/puppetboard":
-    ensure   => present,
-    provider => git,
-    owner    => $user,
-    source   => $git_source,
-    revision => $revision,
-    require  => User[$user],
-  }
+    vcsrepo { "${basedir}/puppetboard":
+        ensure   => present,
+        provider => git,
+        owner    => $user,
+        source   => $git_source,
+        revision => $revision,
+        require  => User[$user]
+    }
 
-  file { "${basedir}/puppetboard":
-    owner   => $user,
-    recurse => true,
-  }
+    file { "${basedir}/puppetboard":
+        owner   => $user,
+        recurse => true
+    }
 
   #Template consumes:
   #$dev_listen_host
@@ -225,50 +230,49 @@ class puppetboard(
   #$puppetdb_timeout
   #$unresponsive
   #$extra_settings
-  file {"${basedir}/puppetboard/settings.py":
-    ensure  => 'file',
-    group   => $group,
-    mode    => '0644',
-    owner   => $user,
-    content => template('puppetboard/settings.py.erb'),
-    require => Vcsrepo["${basedir}/puppetboard"],
-  }
-
-  python::virtualenv { "${basedir}/virtenv-puppetboard":
-    ensure       => present,
-    version      => 'system',
-    requirements => "${basedir}/puppetboard/requirements.txt",
-    systempkgs   => true,
-    distribute   => false,
-    owner        => $user,
-    cwd          => "${basedir}/puppetboard",
-    require      => Vcsrepo["${basedir}/puppetboard"],
-    proxy        => $python_proxy,
-  }
-
-  if $listen == 'public' {
-    file_line { 'puppetboard listen':
-      path    => "${basedir}/puppetboard/dev.py",
-      line    => " app.run('0.0.0.0')",
-      match   => ' app.run\(\'([\d\.]+)\'\)',
-      notify  => Service['puppetboard'],
-      require => [
-        File["${basedir}/puppetboard"],
-        Python::Virtualenv["${basedir}/virtenv-puppetboard"]
-      ],
+    file {"${basedir}/puppetboard/settings.py":
+        ensure  => 'file',
+        group   => $group,
+        mode    => '0644',
+        owner   => $user,
+        content => template('puppetboard/settings.py.erb'),
+        require => Vcsrepo["${basedir}/puppetboard"],
     }
-  }
 
-  if $manage_git {
-    package {'git':
-      ensure => installed,
+    python::virtualenv { "${basedir}/virtenv-puppetboard":
+        ensure       => present,
+        version      => 'system',
+        requirements => "${basedir}/puppetboard/requirements.txt",
+        systempkgs   => true,
+        distribute   => false,
+        owner        => $user,
+        cwd          => "${basedir}/puppetboard",
+        require      => Vcsrepo["${basedir}/puppetboard"],
+        proxy        => $python_proxy,
     }
-  }
 
-  if $manage_virtualenv {
-    package { $::puppetboard::params::virtualenv:
-      ensure => installed,
+    if $listen == 'public' {
+        file_line { 'puppetboard listen':
+            path    => "${basedir}/puppetboard/dev.py",
+            line    => " app.run('0.0.0.0')",
+            match   => ' app.run\(\'([\d\.]+)\'\)',
+            notify  => Service['puppetboard'],
+            require => [
+                File["${basedir}/puppetboard"],
+                Python::Virtualenv["${basedir}/virtenv-puppetboard"]
+                ],
+            }
+        }
+
+        if $manage_git {
+            package {'git':
+            ensure => installed,
+        }
     }
-  }
 
+    if $manage_virtualenv {
+        package { $::puppetboard::params::virtualenv:
+            ensure => installed,
+        }
+    }
 }

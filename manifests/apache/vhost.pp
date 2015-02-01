@@ -35,6 +35,11 @@
 #   (string) Base directory where to build puppetboard vcsrepo and python virtualenv.
 #   Defaults to '/srv/puppetboard' ($::puppetboard::params::basedir)
 #
+# === Authors
+#
+# 2015 Djuri Baars
+# 2014 Spencer Krum
+#
 class puppetboard::apache::vhost (
   $vhost_name,
   $wsgi_alias  = '/',

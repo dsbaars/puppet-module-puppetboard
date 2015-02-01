@@ -1,3 +1,4 @@
+Copyright © 2015 Djuri Baars
 Copyright © 2013-2014  Spencer Krum
 
 Licensed under the Apache License, Version 2.0 (the "License");

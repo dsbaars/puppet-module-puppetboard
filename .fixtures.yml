@@ -1,0 +1,23 @@
+fixtures:
+    forge_modules:
+        apache: "puppetlabs/apache"
+        stdlib:
+            repo: "puppetlabs/stdlib"
+            ref: "4.5.0"
+        apt:
+            repo: "puppetlabs/apt"
+            ref: "1.7.0"
+        concat:
+            repo: "puppetlabs/concat"
+            ref: "1.1.2"
+        nginx:
+            repo: "jfryman/nginx"
+            ref: "0.2.1"
+        python:
+            repo: "stankevich/python"
+            ref: "1.8.2"
+        vcsrepo:
+            repo: "puppetlabs/vcsrepo"
+            ref: "1.2.0"
+    symlinks:
+        puppetboard: "#{source_dir}"
