@@ -4,6 +4,7 @@ describe 'puppetboard::nginx::vhost' do
     let :pre_condition do
         [
             'include ::nginx',
+            'include ::python',
         ]
     end
     let (:params) { { :vhost_name => 'www.rspec.example.com' } }
@@ -20,5 +21,10 @@ describe 'puppetboard::nginx::vhost' do
     end
     context 'with defaults for all parameters' do
         it { should contain_class('nginx')}
+        it {
+            should contain_class('python')
+            should contain_package('python-pip')
+        }
+        it { should contain_python__pip('uwsgi') }
     end
 end

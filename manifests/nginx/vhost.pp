@@ -53,6 +53,10 @@ class puppetboard::nginx::vhost (
         "${wsgi_alias}" => "${docroot}/wsgi.py",
     }
 
+    ::python::pip { 'uwsgi':
+        ensure => present
+    }
+
     # Template Uses:
     # - $basedir
     #
@@ -64,12 +68,16 @@ class puppetboard::nginx::vhost (
         require => User[$wsgi_user],
     }
 
-    file { '/etc/init/uwsgi-puppetboard':
+    file { '/etc/init/uwsgi-puppetboard.conf':
         ensure  => present,
         content => template('puppetboard/upstart/uwsgi-puppetboard.erb'),
         owner   => $wsgi_user,
         group   => $wsgi_group,
         require => User[$wsgi_user],
+    }
+    ~>
+    service { 'uwsgi-puppetboard':
+        provider => 'upstart',
     }
 
     ::nginx::resource::vhost { $vhost_name:
