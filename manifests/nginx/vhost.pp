@@ -77,7 +77,10 @@ class puppetboard::nginx::vhost (
         content => template('puppetboard/upstart/uwsgi-puppetboard.erb'),
         owner   => $wsgi_user,
         group   => $wsgi_group,
-        require => User[$wsgi_user],
+        require => [
+            User[$wsgi_user],
+            Python::Pip['uwsgi']
+        ]
     }
     ~>
     service { 'uwsgi-puppetboard':
