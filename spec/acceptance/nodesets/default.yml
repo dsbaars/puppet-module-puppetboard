@@ -14,6 +14,7 @@ HOSTS:
         docker_cmd: ['/sbin/init']
         docker_preserve_image: true
         docker_image_commands:
+             - apt-get install -y openssh-server
              - wget --no-check-certificate https://apt.puppetlabs.com/puppetlabs-release-trusty.deb
              - apt-get install -y wget ca-certificates
              - dpkg -i puppetlabs-release-trusty.deb

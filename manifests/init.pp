@@ -239,7 +239,7 @@ class puppetboard(
         require => Vcsrepo["${basedir}/puppetboard"],
     }
 
-    python::virtualenv { "${basedir}/virtenv-puppetboard":
+    ::python::virtualenv { "${basedir}/virtenv-puppetboard":
         ensure       => present,
         version      => 'system',
         requirements => "${basedir}/puppetboard/requirements.txt",

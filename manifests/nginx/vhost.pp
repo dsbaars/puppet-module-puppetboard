@@ -53,6 +53,10 @@ class puppetboard::nginx::vhost (
         "${wsgi_alias}" => "${docroot}/wsgi.py",
     }
 
+    $uwsgiPkgs = ['build-essential']
+
+    ensure_packages($uwsgiPkgs)
+
     ::python::pip { 'uwsgi':
         ensure => present
     }
