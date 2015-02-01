@@ -86,13 +86,14 @@ class puppetboard::nginx::vhost (
 
     ::python::gunicorn { "${vhost_name}_gunicorn" :
         ensure      => present,
-        virtualenv  => "${basedir}/puppetboard",
+        virtualenv  => "${basedir}/virtenv-puppetboard",
         mode        => 'wsgi',
         dir         => "${basedir}/puppetboard",
         bind        => "unix:${uwsgi_socket}",
-        appmodule   => 'app:app',
+        appmodule   => 'puppetboard.app:app',
         timeout     => 30,
         template    => 'python/gunicorn.erb',
+        environment => "PUPPETBOARD_SETTINGS=\"${basedir}/puppetboard/settings.py\""
     }
 
     ::nginx::resource::vhost { $vhost_name:
@@ -109,5 +110,12 @@ class puppetboard::nginx::vhost (
         location_custom_cfg => {
             'uwsgi_pass' => "unix://${uwsgi_socket}"
         }
+    }
+
+    ::nginx::resource::location { "${vhost_name}_static":
+        ensure         => present,
+        location_alias => "${basedir}/puppetboard/puppetboard/static",
+        vhost          => $vhost_name,
+
     }
 }
