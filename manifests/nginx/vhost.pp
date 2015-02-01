@@ -44,9 +44,15 @@ class puppetboard::nginx::vhost (
     $wsgi_user     = $::puppetboard::params::user,
     $wsgi_group    = $::puppetboard::params::group,
     $basedir       = $::puppetboard::params::basedir,
-    $uwsgi_port    = 9090
+    $uwsgi_port    = 9090,
+    $auth_basic = undef,
+    $auth_basic_user_file = undef,
+    $manage_vhost = true
 ) inherits ::puppetboard::params {
 
+    validate_bool($manage_vhost)
+
+    
     $docroot = "${basedir}/puppetboard"
 
     $wsgi_script_aliases = {
@@ -100,11 +106,15 @@ class puppetboard::nginx::vhost (
     #     environment => "PUPPETBOARD_SETTINGS=\"${basedir}/puppetboard/settings.py\""
     # }
 
-    ::nginx::resource::vhost { $vhost_name:
-        listen_port          => $port,
-        www_root             => $docroot,
-        use_default_location => false,
-        require              => File["${docroot}/wsgi.py"],
+    if manage_vhost {
+        ::nginx::resource::vhost { $vhost_name:
+            listen_port          => $port,
+            www_root             => $docroot,
+            use_default_location => false,
+            require              => File["${docroot}/wsgi.py"],
+            auth_basic           => $auth_basic,
+            auth_basic_user_file => $auth_basic_user_file
+        }
     }
 
     ::nginx::resource::location { "${vhost_name}_uwsgi":
