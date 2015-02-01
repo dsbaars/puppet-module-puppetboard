@@ -53,13 +53,13 @@ class puppetboard::nginx::vhost (
         "${wsgi_alias}" => "${docroot}/wsgi.py",
     }
 
-    $uwsgiPkgs = ['build-essential']
-
-    ensure_packages($uwsgiPkgs)
-
-    ::python::pip { 'uwsgi':
-        ensure => present
-    }
+    # $uwsgiPkgs = ['build-essential']
+    #
+    # ensure_packages($uwsgiPkgs)
+    #
+    # ::python::pip { 'uwsgi':
+    #     ensure => present
+    # }
 
     # Template Uses:
     # - $basedir
@@ -72,16 +72,27 @@ class puppetboard::nginx::vhost (
         require => User[$wsgi_user],
     }
 
-    file { '/etc/init/uwsgi-puppetboard.conf':
-        ensure  => present,
-        content => template('puppetboard/upstart/uwsgi-puppetboard.erb'),
-        owner   => $wsgi_user,
-        group   => $wsgi_group,
-        require => User[$wsgi_user],
-    }
-    ~>
-    service { 'uwsgi-puppetboard':
-        provider => 'upstart',
+    # file { '/etc/init/uwsgi-puppetboard.conf':
+    #     ensure  => present,
+    #     content => template('puppetboard/upstart/uwsgi-puppetboard.erb'),
+    #     owner   => $wsgi_user,
+    #     group   => $wsgi_group,
+    #     require => User[$wsgi_user],
+    # }
+    # ~>
+    # service { 'uwsgi-puppetboard':
+    #     provider => 'upstart',
+    # }
+
+    ::python::gunicorn { "${vhost_name}_gunicorn" :
+        ensure      => present,
+        virtualenv  => "${basedir}/puppetboard",
+        mode        => 'wsgi',
+        dir         => "${basedir}/puppetboard",
+        bind        => "unix:${uwsgi_socket}",
+        appmodule   => 'app:app',
+        timeout     => 30,
+        template    => 'python/gunicorn.erb',
     }
 
     ::nginx::resource::vhost { $vhost_name:

@@ -21,10 +21,6 @@ describe 'puppetboard::nginx::vhost' do
     end
     context 'with defaults for all parameters' do
         it { should contain_class('nginx')}
-        it {
-            should contain_class('python')
-            should contain_package('python-pip')
-        }
-        it { should contain_python__pip('uwsgi') }
+
     end
 end
