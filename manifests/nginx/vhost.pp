@@ -44,7 +44,7 @@ class puppetboard::nginx::vhost (
     $wsgi_user     = $::puppetboard::params::user,
     $wsgi_group    = $::puppetboard::params::group,
     $basedir       = $::puppetboard::params::basedir,
-    $uwsgi_socket  = '/tmp/puppetboard.sock'
+    $uwsgi_port    = 9090
 ) inherits ::puppetboard::params {
 
     $docroot = "${basedir}/puppetboard"
@@ -53,13 +53,13 @@ class puppetboard::nginx::vhost (
         "${wsgi_alias}" => "${docroot}/wsgi.py",
     }
 
-    # $uwsgiPkgs = ['build-essential']
-    #
-    # ensure_packages($uwsgiPkgs)
-    #
-    # ::python::pip { 'uwsgi':
-    #     ensure => present
-    # }
+    $uwsgiPkgs = ['build-essential']
+
+    ensure_packages($uwsgiPkgs)
+
+    ::python::pip { 'uwsgi':
+        ensure => present
+    }
 
     # Template Uses:
     # - $basedir
@@ -72,29 +72,29 @@ class puppetboard::nginx::vhost (
         require => User[$wsgi_user],
     }
 
-    # file { '/etc/init/uwsgi-puppetboard.conf':
-    #     ensure  => present,
-    #     content => template('puppetboard/upstart/uwsgi-puppetboard.erb'),
-    #     owner   => $wsgi_user,
-    #     group   => $wsgi_group,
-    #     require => User[$wsgi_user],
-    # }
-    # ~>
-    # service { 'uwsgi-puppetboard':
-    #     provider => 'upstart',
-    # }
-
-    ::python::gunicorn { "${vhost_name}_gunicorn" :
-        ensure      => present,
-        virtualenv  => "${basedir}/virtenv-puppetboard",
-        mode        => 'wsgi',
-        dir         => "${basedir}/puppetboard",
-        bind        => "unix:${uwsgi_socket}",
-        appmodule   => 'puppetboard.app:app',
-        timeout     => 30,
-        template    => 'python/gunicorn.erb',
-        environment => "PUPPETBOARD_SETTINGS=\"${basedir}/puppetboard/settings.py\""
+    file { '/etc/init/uwsgi-puppetboard.conf':
+        ensure  => present,
+        content => template('puppetboard/upstart/uwsgi-puppetboard.erb'),
+        owner   => $wsgi_user,
+        group   => $wsgi_group,
+        require => User[$wsgi_user],
     }
+    ~>
+    service { 'uwsgi-puppetboard':
+        provider => 'upstart',
+    }
+
+    # ::python::gunicorn { "${vhost_name}_gunicorn" :
+    #     ensure      => present,
+    #     virtualenv  => "${basedir}/virtenv-puppetboard",
+    #     mode        => 'wsgi',
+    #     dir         => "${basedir}/puppetboard",
+    #     bind        => "unix:${uwsgi_socket}",
+    #     appmodule   => 'puppetboard.app:app',
+    #     timeout     => 30,
+    #     template    => 'python/gunicorn.erb',
+    #     environment => "PUPPETBOARD_SETTINGS=\"${basedir}/puppetboard/settings.py\""
+    # }
 
     ::nginx::resource::vhost { $vhost_name:
         listen_port          => $port,
@@ -108,7 +108,8 @@ class puppetboard::nginx::vhost (
         location            => $wsgi_alias,
         vhost               => $vhost_name,
         location_custom_cfg => {
-            'uwsgi_pass' => "unix://${uwsgi_socket}"
+            'uwsgi_pass' => "localhost:${uwsgi_port}",
+            'include'    => '/etc/nginx/uwsgi_params'
         }
     }
 
